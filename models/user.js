@@ -21,6 +21,10 @@ const userSchema = new Schema({
             quantity: {
                 type: Number,
                 required: true
+            },
+            amount: {
+                type: Number,
+                required: true
             }
         }]
     }
@@ -31,14 +35,18 @@ userSchema.methods.addToCart = function (product) {
         return cp.productId.toString() === product._id.toString()
     })
     let newQuantity = 1
+    let newAmount = product.price
     const updatedCartItems = [...this.cart.items]
     if (cartProductIndex >= 0) {
         newQuantity = this.cart.items[cartProductIndex].quantity + 1
+        newAmount = newAmount * newQuantity
         updatedCartItems[cartProductIndex].quantity = newQuantity
+        updatedCartItems[cartProductIndex].amount = newAmount
     } else {
         updatedCartItems.push({
             productId: product._id,
-            quantity: newQuantity
+            quantity: newQuantity,
+            amount: newAmount * newQuantity
         })
     }
     const updatedCart = {

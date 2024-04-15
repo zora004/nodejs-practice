@@ -17,7 +17,8 @@ const userSchema = new Schema({
             required: true,
             ref: 'User'
         }
-    }
+    },
+    total_amount: Number
 })
 
 module.exports = mongoose.model('Order', userSchema)

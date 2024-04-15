@@ -77,12 +77,15 @@ exports.postOrder = (req, res, next) => {
       const products = user.cart.items.map(i => {
         return { quantity: i.quantity, product: { ...i.productId._doc } }
       })
+      const total_amount = products.reduce((total, p) => total + (p.quantity * p.product.price), 0)
+
       const order = new Order({
         user: {
           name: req.user.name,
           userId: req.user
         },
-        products: products
+        products: products,
+        total_amount: total_amount
       })
       order.save()
     })
@@ -108,5 +111,4 @@ exports.getOrders = (req, res, next) => {
     .catch(err => {
       console.log(err)
     })
-
 }
