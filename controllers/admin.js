@@ -11,9 +11,17 @@ exports.postAddProduct = (req, res, next) => {
     const imageUrl = req.body.imageUrl
     const price = req.body.price
     const description = req.body.description
-    const userId = req.user._id
-    const product = new Product(title, price, description, imageUrl, null, userId)
-    product.save()
+    const product = new Product(
+        {
+            title: title,
+            price: price,
+            description: description,
+            imageUrl: imageUrl,
+            userId: req.user
+        }
+    )
+    product
+        .save()
         .then(result => {
             res.status(201).json({ message: 'Created Product!' })
         }).catch(err => {
@@ -39,19 +47,18 @@ exports.postEditProduct = (req, res, next) => {
     const prodId = req.body.id
     const updatedTitle = req.body.title
     const updatedPrice = req.body.price
-    const updateImageUrl = req.body.imageUrl
+    const updatedImageUrl = req.body.imageUrl
     const updatedDesc = req.body.description
 
-    const product = new Product(
-        updatedTitle,
-        updatedPrice,
-        updatedDesc,
-        updateImageUrl,
-        prodId
-    )
-
-    product
-        .save()
+    Product
+        .findById(prodId)
+        .then(product => {
+            product.title = updatedTitle
+            product.price = updatedPrice
+            product.description = updatedDesc
+            product.imageUrl = updatedImageUrl
+            return product.save()
+        })
         .then(result => {
             res.status(200).json({ message: 'Product successfully updated!' })
         })
@@ -59,7 +66,9 @@ exports.postEditProduct = (req, res, next) => {
 }
 
 exports.getProducts = (req, res, next) => {
-    Product.fetchAll()
+    Product.find()  
+        // .select('title price -_id')
+        // .populate('userId', 'name')
         .then(products => {
             res.status(200).json(products)
         }).catch(err => {
@@ -69,7 +78,7 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
     const prodId = req.body.id
-    Product.deleteById(prodId)
+    Product.findByIdAndDelete(prodId)
         .then(() => {
             console.log('Product deleted!')
             res.status(200).json({ message: 'Product deleted!' })

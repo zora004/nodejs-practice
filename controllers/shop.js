@@ -1,7 +1,8 @@
 const Product = require('../models/product')
+const Order = require('../models/order')
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll()
+  Product.find()
     .then(products => {
       res.status(200).json(products)
     })
@@ -21,7 +22,7 @@ exports.getProduct = (req, res, next) => {
 }
 
 exports.getIndex = (req, res, next) => {
-  Product.fetchAll()
+  Product.find()
     .then(products => {
       res.status(200).json({ products })
     })
@@ -32,17 +33,10 @@ exports.getIndex = (req, res, next) => {
 
 exports.getCart = (req, res, next) => {
   req.user
-    .getCart()
-    .then(cart => {
-      return cart
-        .getProducts()
-        .then(products => {
-          res.status(200).json(products)
-        })
-        .catch(err => {
-          console.log(err)
-        })
-      console.log(cart)
+    .populate('cart.items.productId')
+    .then(user => {
+      const products = user.cart.items
+      res.status(200).json(products)
     }).catch(err => {
       console.log(err)
     })
@@ -50,35 +44,12 @@ exports.getCart = (req, res, next) => {
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.id
-  let fetchedCart
-  let newQuantity = 1
-  req.user
-    .getCart()
-    .then(cart => {
-      fetchedCart = cart
-      return cart.getProducts({ where: { id: prodId } })
-    })
-    .then(products => {
-      let product
-      if (products.length > 0) {
-        product = products[0]
-      }
-      if (product) {
-        const oldQuantity = product.cart_item.quantity
-        newQuantity = oldQuantity + 1
-        return product
-      }
-      return Product.findByPk(prodId)
-    })
+  Product.findById(prodId)
     .then(product => {
-      return fetchedCart.addProduct(product, {
-        through: { quantity: newQuantity }
-      })
-    })
-    .then(() => {
+      return req.user.addToCart(product)
+    }).then(result => {
       res.status(200).json({ message: 'Item successfully added to cart.' })
-    })
-    .catch(err => {
+    }).catch(err => {
       console.log(err)
     })
 }
@@ -86,14 +57,7 @@ exports.postCart = (req, res, next) => {
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.id
   req.user
-    .getCart()
-    .then(cart => {
-      return cart.getProducts({ where: { id: prodId } })
-    })
-    .then(products => {
-      const product = products[0]
-      return product.cart_item.destroy()
-    })
+    .removeFromCart(prodId)
     .then(result => {
       res.status(200).json({ message: 'Item successfully removed from cart.' })
     })
@@ -107,43 +71,42 @@ exports.getCheckout = (req, res, next) => {
 }
 
 exports.postOrder = (req, res, next) => {
-  let fetchedCart
   req.user
-    .getCart()
-    .then(cart => {
-      fetchedCart = cart
-      return cart.getProducts()
-    })
-    .then(products => {
-      req.user
-        .createOrder()
-        .then(order => {
-          return order.addProduct(products.map(product => {
-            product.order_item = { quantity: product.cart_item.quantity }
-            return product
-          }))
-        })
-        .catch(err => {
-          console.log(err)
-        })
-      console.log(products)
+    .populate('cart.items.productId')
+    .then(user => {
+      const products = user.cart.items.map(i => {
+        return { quantity: i.quantity, product: { ...i.productId._doc } }
+      })
+      const order = new Order({
+        user: {
+          name: req.user.name,
+          userId: req.user
+        },
+        products: products
+      })
+      order.save()
     })
     .then(result => {
-      return fetchedCart.setProducts(null)
-    }).then(result => {
+      return req.user.clearCart()
+    })
+    .then(() => {
       res.json({ message: 'Order successful!' })
     })
     .catch(err => {
       console.log(err)
     })
+
 }
 
 exports.getOrders = (req, res, next) => {
-  req.user.getOrders({include: ['products']})
+  Order
+    .find({ "user.userId": req.user._id })
     .then(orders => {
       res.status(200).json(orders)
+
     })
     .catch(err => {
       console.log(err)
     })
+
 }

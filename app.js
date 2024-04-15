@@ -2,9 +2,9 @@ const path = require('path')
 
 const express = require('express')
 const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
 
 const errorController = require('./controllers/error')
-const mongoConnect = require('./util/database').mongoConnect
 const User = require('./models/user')
 
 const app = express()
@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(express.static(path.join(__dirname, 'public')))
 
 app.use((req, res, next) => {
-    User.findById('6618ed7f200d3c7568242da2')
+    User.findById('661c97a14409cd0fdbbc7222')
         .then(user => {
             req.user = user
             next()
@@ -31,7 +31,20 @@ app.use(shopRoutes)
 
 app.use(errorController.get404)
 
-
-mongoConnect(() => {
-    app.listen(3000)
-})
+mongoose.connect('mongodb+srv://zora:cEGbb0mhdxrLDzAs@atlascluster.q3vd528.mongodb.net/shop?retryWrites=true&w=majority')
+    .then(result => {
+        User.findOne().then(user => {
+            if (!user) {
+                const user = new User({
+                    name: 'Zora',
+                    email: 'zora@gmail',
+                    cart: {
+                        items: []
+                    }
+                })
+                user.save()
+            }
+        })
+        app.listen(3000)
+    })
+    .catch(err => { console.log(err) })
