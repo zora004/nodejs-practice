@@ -29,3 +29,9 @@ exports.postLogout = (req, res, next) => {
         res.status(200).json({ message: 'logout success!' })
     })
 }
+
+exports.postSignup = (req, res, next) => {
+    const email = req.body.email
+    const password = req.body.password
+    const confirm_password = req.body.confirm_password
+}
