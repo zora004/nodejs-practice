@@ -67,10 +67,10 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.getProducts = (req, res, next) => {
     Product.find()
-    // .select('title price -_id')
-    // .populate('userId', 'name')
-    .then(products => {
-            console.log(req.isLoggedIn, 'zora')
+        // .select('title price -_id')
+        // .populate('userId', 'name')
+        .then(products => {
+            console.log(req.user)
             res.status(200).json(products)
         }).catch(err => {
             console.log(err)
