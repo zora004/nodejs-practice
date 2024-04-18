@@ -3,11 +3,11 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
 const userSchema = new Schema({
-    name: {
+    email: {
         type: String,
         required: true
     },
-    email: {
+    password: {
         type: String,
         required: true
     },
@@ -29,10 +29,6 @@ const userSchema = new Schema({
         }]
     }
 })
-
-userSchema.methods.test = function () {
-    console.log('zora')
-}
 
 userSchema.methods.addToCart = function (product) {
     const cartProductIndex = this.cart.items.findIndex(cp => {
