@@ -23,7 +23,8 @@ const productSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User',
         required: true
-    }
+    },
+    created_at: Date
 })
 
 module.exports = mongoose.model('Product', productSchema)
@@ -34,11 +35,11 @@ module.exports = mongoose.model('Product', productSchema)
 // const ObjectId = mongodb.ObjectId
 
 // class Product {
-//   constructor(title, price, description, imageUrl, id, userId) {
+//   constructor(title, price, description, image, id, userId) {
 //     this.title = title
 //     this.price = price
 //     this.description = description
-//     this.imageUrl = imageUrl
+//     this.image = image
 //     this._id = id ? new ObjectId(id) : null
 //     this.user_id = userId ? new ObjectId(userId) : null
 //   }
